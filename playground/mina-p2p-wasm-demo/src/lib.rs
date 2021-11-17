@@ -1,7 +1,7 @@
 // use anyhow::Result;
 use libp2p::{
     core::{upgrade, ProtocolName},
-    futures::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, StreamExt},
+    futures::{io::BufReader, AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, StreamExt},
     identity, noise,
     pnet::{PnetConfig, PreSharedKey},
     request_response::{
@@ -26,10 +26,18 @@ const MINA_PEER_ADDR: &str =
     "/ip4/95.217.106.189/tcp/8302/p2p/12D3KooWSxxCtzRLfUzoxgRYW9fTKWPUujdvStuwCPSPUN3629mb";
 // "/ip4/127.0.0.1/tcp/8302/p2p/12D3KooWKK3RpV1MWAZk3FJ5xqbVPL2BMDdUEGSfwfQoUprBNZCv";
 
+static mut EVENT_EMITTER: Option<EventEmitter> = None;
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace= console, js_name = log)]
     fn log_string(s: String);
+
+    #[wasm_bindgen]
+    pub type EventEmitter;
+
+    #[wasm_bindgen(method, js_name = emit)]
+    pub fn emit(e: &EventEmitter, event: &str, value: &str);
 }
 
 #[wasm_bindgen]
@@ -42,6 +50,13 @@ pub fn wasm_test() -> bool {
 pub async fn wasm_test_async() -> bool {
     log_string("wasm_test_async".into());
     true
+}
+
+#[wasm_bindgen]
+pub fn set_event_emitter(e: EventEmitter) {
+    log_string("set_event_emitter".into());
+    e.emit("update", "hello from wasm");
+    unsafe { EVENT_EMITTER = Some(e) };
 }
 
 #[wasm_bindgen]
@@ -99,14 +114,6 @@ async fn connect_async(addr: &str) -> bool {
     match swarm.dial_addr(parsed_addr) {
         Ok(_) => {
             log_string(format!("dial ok"));
-            // match dial.await {
-            //     Ok(_) => {
-            //         log_string("dial await ok".into());
-            //         // return Ok(true);
-            //         return true;
-            //     }
-            //     Err(e) => log_string(format!("Fail to dail 2: {}", e)),
-            // };
             loop {
                 match swarm.select_next_some().await {
                     SwarmEvent::ConnectionEstablished { peer_id, .. } => {
@@ -119,12 +126,22 @@ async fn connect_async(addr: &str) -> bool {
                     _ => {}
                 }
             }
-            return true;
+            // return true;
         }
         Err(e) => log_string(format!("Fail to dail: {}", e)),
     }
     false
     // Ok(false)
+}
+
+fn get_event_emitter<'a>() -> Option<&'a EventEmitter> {
+    unsafe {
+        if let Some(ee) = &EVENT_EMITTER {
+            Some(ee)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(NetworkBehaviour)]
@@ -162,7 +179,7 @@ struct NodeStatusProtocol;
 impl ProtocolName for NodeStatusProtocol {
     fn protocol_name(&self) -> &[u8] {
         // b"/mina/node-status"
-        b"/mytest"
+        b"/webnode"
     }
 }
 
@@ -201,10 +218,39 @@ impl RequestResponseCodec for NodeStatusCodec {
     where
         T: AsyncRead + Unpin + Send,
     {
-        let mut json = String::new();
-        io.read_to_string(&mut json).await?;
-        log_string(format!("read_response: {}", json));
-        Ok(NodeStatusResponse(json))
+        let mut reader = BufReader::new(io);
+        log_string(format!("read_response: begin loop"));
+        loop {
+            let mut line = String::new();
+            match reader.read_line(&mut line).await {
+                Ok(n) => {
+                    let line = line.trim();
+                    if line.len() > 0 {
+                        match base64::decode(line) {
+                            Ok(msg) => {
+                                let decoded = String::from_utf8_lossy(&msg);
+                                log_string(format!("read_response: {}", decoded));
+                                if let Some(ee) = get_event_emitter() {
+                                    ee.emit("update", &decoded);
+                                }
+                            }
+                            _ => {
+                                log_string(format!("read_response({}): {}", n, line));
+                                if let Some(ee) = get_event_emitter() {
+                                    ee.emit("log", line);
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(err) => {
+                    log_string(format!("read_response err: {:?}", err));
+                    break;
+                }
+            }
+        }
+        log_string(format!("read_response: end loop"));
+        Ok(NodeStatusResponse("read_response".into()))
     }
 
     async fn write_request<T>(
