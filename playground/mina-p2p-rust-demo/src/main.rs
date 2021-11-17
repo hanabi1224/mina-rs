@@ -1,22 +1,24 @@
-// use anyhow::Result;
+use anyhow::{bail, Result};
+use futures::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, StreamExt};
 use libp2p::{
     core::{upgrade, ProtocolName},
-    futures::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, StreamExt},
-    identity, noise,
+    identity,
+    mdns::{Mdns, MdnsEvent},
+    noise,
     pnet::{PnetConfig, PreSharedKey},
     request_response::{
         ProtocolSupport, RequestResponse, RequestResponseCodec, RequestResponseConfig,
         RequestResponseEvent,
     },
     swarm::{NetworkBehaviourEventProcess, SwarmBuilder, SwarmEvent},
-    wasm_ext::ExtTransport,
+    tcp::TokioTcpConfig,
+    websocket::WsConfig,
     NetworkBehaviour, PeerId, Transport,
 };
 use std::{io, time::Duration};
+// use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 // use libp2p_relay::RelayConfig;
 use multihash::{Blake2b256, StatefulHasher};
-// use std::time::Duration;
-use wasm_bindgen::prelude::*;
 
 const RENDEZVOUS_STRING: &str =
     "/coda/0.0.1/5f704cc0c82e0ed70e873f0893d7e06f148524e3f0bdae2afb02e7819a0c24d1";
@@ -24,47 +26,22 @@ const RENDEZVOUS_STRING: &str =
 //     "/ip4/127.0.0.1/tcp/43637/ws/p2p/QmdDda64RhVC2BMHdW8y92jfcjWEH8qhzozHkbRt6gKXY2";
 const MINA_PEER_ADDR: &str =
     "/ip4/95.217.106.189/tcp/8302/p2p/12D3KooWSxxCtzRLfUzoxgRYW9fTKWPUujdvStuwCPSPUN3629mb";
-// "/ip4/127.0.0.1/tcp/8302/p2p/12D3KooWKK3RpV1MWAZk3FJ5xqbVPL2BMDdUEGSfwfQoUprBNZCv";
+// "/ip4/127.0.0.1/tcp/40661/p2p/12D3KooWEKFr7y5Gh4zHbNzwZt3QLjQq84czaGNaSJRHFMh7ufxP";
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace= console, js_name = log)]
-    fn log_string(s: String);
+fn main() {
+    main_async().unwrap();
 }
 
-#[wasm_bindgen]
-pub fn wasm_test() -> bool {
-    log_string("wasm_test".into());
-    true
-}
+#[tokio::main]
+async fn main_async() -> Result<()> {
+    env_logger::init();
 
-#[wasm_bindgen]
-pub async fn wasm_test_async() -> bool {
-    log_string("wasm_test_async".into());
-    true
-}
-
-#[wasm_bindgen]
-pub async fn connect(addr: String) -> bool {
-    connect_async(&addr).await
-}
-
-// #[tokio::main(flavor = "current_thread")]
-async fn connect_async(addr: &str) -> bool {
-    // env_logger::init();
-
-    let js_promise = js_sys::Promise::resolve(&42.into());
-    let js_future: wasm_bindgen_futures::JsFuture = js_promise.into();
-    let js_val = js_future.await.unwrap();
-    log_string(format!("js_val: {:?}", js_val));
-
-    log_string(format!("Relay node ws address: {}", addr));
-    log_string(format!("Mina node address: {}", MINA_PEER_ADDR));
+    println!("Mina node address: {}", MINA_PEER_ADDR);
 
     // Create a random PeerId
     let id_keys = identity::Keypair::generate_ed25519();
     let peer_id = PeerId::from(id_keys.public());
-    log_string(format!("Local peer id: {:?}", peer_id));
+    println!("Local peer id: {:?}", peer_id);
 
     // Create a keypair for authenticated encryption of the transport.
     let noise_keys = noise::Keypair::<noise::X25519Spec>::new()
@@ -75,56 +52,67 @@ async fn connect_async(addr: &str) -> bool {
     hasher.update(RENDEZVOUS_STRING.as_bytes());
     let hash = hasher.finalize();
     let psk = hash.as_ref();
-    log_string(format!("psk: {}", hex::encode(psk)));
+    println!("psk: {}", hex::encode(psk));
     let mut psk_fixed: [u8; 32] = Default::default();
     psk_fixed.copy_from_slice(&psk[0..32]);
     let psk = PreSharedKey::new(psk_fixed);
     let mut mux_config = libp2p_mplex::MplexConfig::new();
     mux_config.set_protocol(b"/coda/mplex/1.0.0");
     let transport = {
-        let ws = ExtTransport::new(libp2p::wasm_ext::ffi::websocket_transport());
-        ws.and_then(move |socket, _| PnetConfig::new(psk).handshake(socket))
+        let tcp = TokioTcpConfig::new().nodelay(true);
+        let ws = WsConfig::new(tcp.clone());
+        tcp.or_transport(ws)
+            .and_then(move |socket, _| PnetConfig::new(psk).handshake(socket))
             .upgrade(upgrade::Version::V1)
             .authenticate(noise::NoiseConfig::xx(noise_keys).into_authenticated())
             .multiplex(mux_config)
             .boxed()
     };
 
-    let parsed_addr = addr.parse().unwrap();
-    log_string(format!("Connecting to relay server via ws {} ... ", addr));
     let mut swarm = {
-        let behaviour = NodeStatusBehaviour::new().await.unwrap();
-        SwarmBuilder::new(transport, behaviour, peer_id).build()
+        let mut behaviour = NodeStatusBehaviour::new().await?;
+        SwarmBuilder::new(transport, behaviour, peer_id)
+            .executor(Box::new(|fut| {
+                tokio::spawn(fut);
+            }))
+            .build()
     };
+
+    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+    swarm.listen_on("/ip4/0.0.0.0/tcp/0/ws".parse()?)?;
+    let parsed_addr = MINA_PEER_ADDR.parse().unwrap();
+    println!("Connecting to mina node {} ... ", MINA_PEER_ADDR);
     match swarm.dial_addr(parsed_addr) {
         Ok(_) => {
-            log_string(format!("dial ok"));
-            // match dial.await {
-            //     Ok(_) => {
-            //         log_string("dial await ok".into());
-            //         // return Ok(true);
-            //         return true;
-            //     }
-            //     Err(e) => log_string(format!("Fail to dail 2: {}", e)),
-            // };
-            loop {
-                match swarm.select_next_some().await {
-                    SwarmEvent::ConnectionEstablished { peer_id, .. } => {
-                        log_string(format!("Connected to {}", peer_id));
-                        swarm
-                            .behaviour_mut()
-                            .request_response
-                            .send_request(&peer_id, NodeStatusRequest);
-                    }
-                    _ => {}
-                }
-            }
-            return true;
+            println!("dial ok");
         }
-        Err(e) => log_string(format!("Fail to dail: {}", e)),
+        Err(e) => bail!("Fail to dail: {}", e),
+    };
+    loop {
+        match swarm.select_next_some().await {
+            SwarmEvent::NewListenAddr { address, .. } => println!("Listening on {:?}", address),
+            SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                println!("Connected to {}", peer_id);
+                swarm
+                    .behaviour_mut()
+                    .request_response
+                    .send_request(&peer_id, NodeStatusRequest);
+            }
+            // SwarmEvent::Behaviour(MdnsEvent::Discovered(peers)) => {
+            //     for (peer, addr) in peers {
+            //         println!("discovered {} {}", peer, addr);
+            //     }
+            // }
+            // SwarmEvent::Behaviour(MdnsEvent::Expired(expired)) => {
+            //     for (peer, addr) in expired {
+            //         println!("expired {} {}", peer, addr);
+            //     }
+            // }
+            _ => {}
+        }
     }
-    false
-    // Ok(false)
+    // tokio::time::sleep(Duration::from_secs(60 * 60 * 24)).await;
+    Ok(())
 }
 
 #[derive(NetworkBehaviour)]
@@ -132,13 +120,16 @@ async fn connect_async(addr: &str) -> bool {
 // #[behaviour(out_event = "NodeStatusEvent")]
 struct NodeStatusBehaviour {
     request_response: RequestResponse<NodeStatusCodec>,
+    mdns: Mdns,
 }
 
 impl NodeStatusBehaviour {
     async fn new() -> anyhow::Result<Self> {
+        let mdns = Mdns::new(Default::default()).await?;
         let mut config = RequestResponseConfig::default();
         config.set_request_timeout(Duration::from_secs(60));
         Ok(Self {
+            mdns,
             request_response: RequestResponse::new(
                 NodeStatusCodec,
                 std::iter::once((NodeStatusProtocol, ProtocolSupport::Full)),
@@ -148,11 +139,30 @@ impl NodeStatusBehaviour {
     }
 }
 
+impl NetworkBehaviourEventProcess<MdnsEvent> for NodeStatusBehaviour {
+    fn inject_event(&mut self, event: MdnsEvent) {
+        match event {
+            MdnsEvent::Discovered(list) => {
+                for (peer, _) in list {
+                    println!("Peer discovered: {}", peer);
+                }
+            }
+            MdnsEvent::Expired(list) => {
+                for (peer, _) in list {
+                    if !self.mdns.has_node(&peer) {
+                        println!("Peer expired: {}", peer);
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl NetworkBehaviourEventProcess<RequestResponseEvent<NodeStatusRequest, NodeStatusResponse>>
     for NodeStatusBehaviour
 {
     fn inject_event(&mut self, event: RequestResponseEvent<NodeStatusRequest, NodeStatusResponse>) {
-        log_string(format!("RequestResponseEvent: {:?}", event));
+        println!("RequestResponseEvent: {:?}", event);
     }
 }
 
@@ -161,8 +171,8 @@ struct NodeStatusProtocol;
 
 impl ProtocolName for NodeStatusProtocol {
     fn protocol_name(&self) -> &[u8] {
-        // b"/mina/node-status"
-        b"/mytest"
+        b"/mina/node-status"
+        // b"/mytest"
     }
 }
 
@@ -189,7 +199,7 @@ impl RequestResponseCodec for NodeStatusCodec {
     where
         T: AsyncRead + Unpin + Send,
     {
-        log_string(format!("read_request"));
+        println!("read_request");
         Ok(NodeStatusRequest)
     }
 
@@ -203,7 +213,7 @@ impl RequestResponseCodec for NodeStatusCodec {
     {
         let mut json = String::new();
         io.read_to_string(&mut json).await?;
-        log_string(format!("read_response: {}", json));
+        println!("read_response: {}", json);
         Ok(NodeStatusResponse(json))
     }
 
@@ -216,7 +226,7 @@ impl RequestResponseCodec for NodeStatusCodec {
     where
         T: AsyncWrite + Unpin + Send,
     {
-        log_string(format!("write_request"));
+        println!("write_request");
         io.close().await?;
         Ok(())
     }
@@ -230,9 +240,29 @@ impl RequestResponseCodec for NodeStatusCodec {
     where
         T: AsyncWrite + Unpin + Send,
     {
-        log_string(format!("write_response: {}", json));
+        println!("write_response: {}", json);
         io.write_all(json.as_bytes()).await?;
         io.close().await?;
         Ok(())
     }
 }
+
+// #[derive(Debug)]
+// enum NodeStatusEvent {
+//     RequestResponse(RequestResponseEvent<NodeStatusRequest, NodeStatusResponse>),
+//     Mdns(MdnsEvent),
+// }
+
+// impl From<RequestResponseEvent<NodeStatusRequest, NodeStatusResponse>> for NodeStatusEvent {
+//     fn from(event: RequestResponseEvent<NodeStatusRequest, NodeStatusResponse>) -> Self {
+//         println!("RequestResponseEvent0: {:?}", event);
+//         NodeStatusEvent::RequestResponse(event)
+//     }
+// }
+
+// impl From<MdnsEvent> for NodeStatusEvent {
+//     fn from(event: MdnsEvent) -> Self {
+//         println!("MdnsEvent: {:?}", event);
+//         NodeStatusEvent::Mdns(event)
+//     }
+// }
