@@ -2,6 +2,15 @@
   <div>
     <div><h2>Mina Web Node Demo</h2></div>
     <p>
+      Run
+      <a
+        href="https://github.com/hanabi1224/mina-rs/tree/playground/playground/mina-p2p-wasm-demo/proxy"
+        >proxy</a
+      >
+      locally
+    </p>
+    <p></p>
+    <p>
       Local node address: <br />
       <input v-model="addr" class="addr" /> <br />
       <button @click="connect">Connect</button>
