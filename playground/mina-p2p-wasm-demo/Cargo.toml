@@ -41,4 +41,4 @@ wasm-bindgen-futures = "0.4"
 crate-type = ["cdylib", "lib"]
 
 [profile.release]
-opt = "s"
+opt-level = 's'

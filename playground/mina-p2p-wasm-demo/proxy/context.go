@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 type Context struct {
@@ -25,6 +27,7 @@ func NewContext(host *host.Host) *Context {
 
 type PeerStatus struct {
 	Connected bool
+	AddrInfo  *peer.AddrInfo
 	Json      *MinaNodeStatusJson
 	Timestamp time.Time
 }
@@ -65,10 +68,36 @@ func (s *PeerStatusLite) ToBase64EncodedJson() string {
 	return base64.RawStdEncoding.Strict().EncodeToString(b)
 }
 
-func (ctx *Context) UpdateStatus(peerId peer.ID, connected bool, json *MinaNodeStatusJson) {
-	status := &PeerStatus{Connected: connected, Json: json, Timestamp: time.Now()}
-	ctx.PeerId2Status[peerId] = status
+func (ctx *Context) UpdateStatus(addrInfo *peer.AddrInfo, connected bool, json *MinaNodeStatusJson) {
+	if addrInfo == nil {
+		return
+	}
+	status := &PeerStatus{AddrInfo: addrInfo, Connected: connected, Json: json, Timestamp: time.Now()}
+	ctx.PeerId2Status[addrInfo.ID] = status
 	if ctx.NotifyFunc != nil {
-		(*ctx.NotifyFunc)(peerId, status)
+		(*ctx.NotifyFunc)(addrInfo.ID, status)
+	}
+}
+
+func (ctx *Context) Loop() {
+	now := time.Now()
+	for _, v := range ctx.PeerId2Status {
+		if v == nil || v.AddrInfo == nil {
+			continue
+		}
+		if v.Timestamp.Add(time.Minute * 1).Before(now) {
+			ctx.FetchNodeStatus(v.AddrInfo)
+		}
+		if v.Json != nil && v.Json.Peers != nil && len(v.Json.Peers) > 0 {
+			for _, peerInfo := range v.Json.Peers {
+				if peerInfo != nil {
+					if mtaddr, err := ma.NewMultiaddr(fmt.Sprintf("/ip4/%s/tcp/%d/p2p/%s", peerInfo.Host, peerInfo.Port, peerInfo.PeerId)); err == nil {
+						if minaPeerInfo, err := peer.AddrInfoFromP2pAddr(mtaddr); err == nil {
+							ctx.FetchNodeStatus(minaPeerInfo)
+						}
+					}
+				}
+			}
+		}
 	}
 }

@@ -93,29 +93,34 @@ func run() {
 		}
 	}
 
+	for {
+		ctx.Loop()
+		time.Sleep(time.Second * 10)
+	}
+
 	log.Printf("relayHost: %s\n", hostAddrStr)
 }
 
-func (ctx *Context) FetchNodeStatus(peerInfo *peer.AddrInfo) {
+func (ctx *Context) FetchNodeStatus(addrInfo *peer.AddrInfo) {
 	host := *ctx.Host
-	c := host.Network().Connectedness(peerInfo.ID)
+	c := host.Network().Connectedness(addrInfo.ID)
 	if c != network.Connected {
-		if err := host.Connect(context.Background(), *peerInfo); err != nil {
+		if err := host.Connect(context.Background(), *addrInfo); err != nil {
 			log.Printf("Failed to connect relayHost to mina: %v", err)
-			ctx.UpdateStatus(peerInfo.ID, false, nil)
+			ctx.UpdateStatus(addrInfo, false, nil)
 			return
 		}
 	}
-	s, err := host.NewStream(context.Background(), peerInfo.ID, "/mina/node-status")
+	s, err := host.NewStream(context.Background(), addrInfo.ID, "/mina/node-status")
 	if err != nil {
 		log.Println("huh, this should have worked: ", err)
-		ctx.UpdateStatus(peerInfo.ID, false, nil)
+		ctx.UpdateStatus(addrInfo, false, nil)
 		return
 	}
 	time.Sleep(time.Second * 1)
 	data := readBytes(s)
 	json := LoadMinaNodeStatusJson(data)
-	ctx.UpdateStatus(peerInfo.ID, true, &json)
+	ctx.UpdateStatus(addrInfo, true, &json)
 }
 
 func main() {
