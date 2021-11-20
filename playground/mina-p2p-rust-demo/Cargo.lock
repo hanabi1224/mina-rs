@@ -760,9 +760,9 @@ dependencies = [
 
 [[package]]
 name = "futures-rustls"
-version = "0.21.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a1387e07917c711fb4ee4f48ea0adb04a3c9739e53ef85bf43ae1edc2937a8b"
+checksum = "d383f0425d991a05e564c2f3ec150bd6dde863179c131dd60d8aa73a05434461"
 dependencies = [
  "futures-io",
  "rustls",
@@ -1084,7 +1084,8 @@ checksum = "fbe5e23404da5b4f555ef85ebed98fb4083e55a00c317800bc2a50ede9f3d219"
 
 [[package]]
 name = "libp2p"
-version = "0.41.0"
+version = "0.41.1"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "atomic",
  "bytes",
@@ -1127,6 +1128,7 @@ dependencies = [
 [[package]]
 name = "libp2p-core"
 version = "0.30.1"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "asn1_der",
  "bs58",
@@ -1160,6 +1162,7 @@ dependencies = [
 [[package]]
 name = "libp2p-deflate"
 version = "0.30.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "flate2",
  "futures",
@@ -1169,6 +1172,7 @@ dependencies = [
 [[package]]
 name = "libp2p-dns"
 version = "0.30.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "async-std-resolver",
  "futures",
@@ -1180,7 +1184,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-floodsub"
-version = "0.31.0"
+version = "0.32.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "cuckoofilter",
  "fnv",
@@ -1196,7 +1201,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-gossipsub"
-version = "0.33.1"
+version = "0.34.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "asynchronous-codec",
  "base64",
@@ -1210,6 +1216,7 @@ dependencies = [
  "libp2p-core",
  "libp2p-swarm",
  "log",
+ "open-metrics-client",
  "pin-project 1.0.8",
  "prost",
  "prost-build",
@@ -1222,7 +1229,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-identify"
-version = "0.31.1"
+version = "0.32.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "futures",
  "futures-timer",
@@ -1238,6 +1246,7 @@ dependencies = [
 [[package]]
 name = "libp2p-kad"
 version = "0.33.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "arrayvec 0.5.2",
  "asynchronous-codec",
@@ -1262,7 +1271,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-mdns"
-version = "0.32.0"
+version = "0.33.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "async-io",
  "data-encoding",
@@ -1281,9 +1291,11 @@ dependencies = [
 
 [[package]]
 name = "libp2p-metrics"
-version = "0.1.0"
+version = "0.2.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "libp2p-core",
+ "libp2p-gossipsub",
  "libp2p-identify",
  "libp2p-kad",
  "libp2p-ping",
@@ -1293,7 +1305,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-mplex"
-version = "0.30.0"
+version = "0.31.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -1310,6 +1323,7 @@ dependencies = [
 [[package]]
 name = "libp2p-noise"
 version = "0.33.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "bytes",
  "curve25519-dalek",
@@ -1329,7 +1343,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-ping"
-version = "0.31.1"
+version = "0.32.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "futures",
  "futures-timer",
@@ -1344,6 +1359,7 @@ dependencies = [
 [[package]]
 name = "libp2p-plaintext"
 version = "0.30.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -1359,6 +1375,7 @@ dependencies = [
 [[package]]
 name = "libp2p-pnet"
 version = "0.22.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "futures",
  "log",
@@ -1370,7 +1387,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-relay"
-version = "0.4.1"
+version = "0.5.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "asynchronous-codec",
  "bytes",
@@ -1391,7 +1409,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-rendezvous"
-version = "0.1.1"
+version = "0.2.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "asynchronous-codec",
  "bimap",
@@ -1412,7 +1431,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-request-response"
-version = "0.13.1"
+version = "0.14.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1429,7 +1449,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-swarm"
-version = "0.31.1"
+version = "0.32.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "either",
  "futures",
@@ -1444,7 +1465,8 @@ dependencies = [
 
 [[package]]
 name = "libp2p-swarm-derive"
-version = "0.25.0"
+version = "0.26.1"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "quote",
  "syn",
@@ -1453,6 +1475,7 @@ dependencies = [
 [[package]]
 name = "libp2p-tcp"
 version = "0.30.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "async-io",
  "futures",
@@ -1470,6 +1493,7 @@ dependencies = [
 [[package]]
 name = "libp2p-uds"
 version = "0.30.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "async-std",
  "futures",
@@ -1480,6 +1504,7 @@ dependencies = [
 [[package]]
 name = "libp2p-wasm-ext"
 version = "0.30.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "futures",
  "js-sys",
@@ -1492,6 +1517,7 @@ dependencies = [
 [[package]]
 name = "libp2p-websocket"
 version = "0.32.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "either",
  "futures",
@@ -1508,6 +1534,7 @@ dependencies = [
 [[package]]
 name = "libp2p-yamux"
 version = "0.34.0"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "futures",
  "libp2p-core",
@@ -1768,6 +1795,7 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 [[package]]
 name = "multistream-select"
 version = "0.10.4"
+source = "git+https://github.com/hanabi1224/rust-libp2p?branch=mplex-custom-protocol#e89a2a113efcd017323ede476ac205796ebdd7e0"
 dependencies = [
  "bytes",
  "futures",
@@ -2300,11 +2328,10 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.19.1"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
+checksum = "dac4581f0fc0e0efd529d069e8189ec7b90b8e7680e21beb35141bdc45f36040"
 dependencies = [
- "base64",
  "log",
  "ring",
  "sct",
@@ -2339,9 +2366,9 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "sct"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b362b83898e0e69f38515b82ee15aa80636befe47c3b6d3d89a911e78fc228ce"
+checksum = "d53dcdb7c9f8158937a7981b48accfd39a43af418591a5d008c7b22b5e1b7ca4"
 dependencies = [
  "ring",
  "untrusted",
@@ -2908,9 +2935,9 @@ dependencies = [
 
 [[package]]
 name = "webpki"
-version = "0.21.4"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8e38c0608262c46d4a56202ebabdeb094cef7e560ca7a226c6bf055188aa4ea"
+checksum = "f095d78192e208183081cc07bc5515ef55216397af48b873e5edcd72637fa1bd"
 dependencies = [
  "ring",
  "untrusted",
@@ -2918,9 +2945,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "0.21.1"
+version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aabe153544e473b775453675851ecc86863d2a81d786d741f6b76778f2a48940"
+checksum = "c475786c6f47219345717a043a37ec04cb4bc185e28853adcc4fa0a947eba630"
 dependencies = [
  "webpki",
 ]

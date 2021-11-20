@@ -10,7 +10,7 @@ use libp2p::{
     },
     swarm::{NetworkBehaviourEventProcess, SwarmBuilder, SwarmEvent},
     wasm_ext::ExtTransport,
-    NetworkBehaviour, PeerId, Transport,
+    Multiaddr, NetworkBehaviour, PeerId, Transport,
 };
 use std::{io, time::Duration};
 // use libp2p_relay::RelayConfig;
@@ -95,7 +95,7 @@ async fn connect_async(addr: &str) -> bool {
     psk_fixed.copy_from_slice(&psk[0..32]);
     let psk = PreSharedKey::new(psk_fixed);
     let mut mux_config = libp2p_mplex::MplexConfig::new();
-    mux_config.set_protocol(b"/coda/mplex/1.0.0");
+    mux_config.set_protocol_name(b"/coda/mplex/1.0.0");
     let transport = {
         let ws = ExtTransport::new(libp2p::wasm_ext::ffi::websocket_transport());
         ws.and_then(move |socket, _| PnetConfig::new(psk).handshake(socket))
@@ -105,13 +105,13 @@ async fn connect_async(addr: &str) -> bool {
             .boxed()
     };
 
-    let parsed_addr = addr.parse().unwrap();
+    let parsed_addr: Multiaddr = addr.parse().unwrap();
     log_string(format!("Connecting to relay server via ws {} ... ", addr));
     let mut swarm = {
         let behaviour = NodeStatusBehaviour::new().await.unwrap();
         SwarmBuilder::new(transport, behaviour, peer_id).build()
     };
-    match swarm.dial_addr(parsed_addr) {
+    match swarm.dial(parsed_addr) {
         Ok(_) => {
             log_string(format!("dial ok"));
             loop {

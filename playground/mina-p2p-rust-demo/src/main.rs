@@ -13,7 +13,7 @@ use libp2p::{
     swarm::{NetworkBehaviourEventProcess, SwarmBuilder, SwarmEvent},
     tcp::TokioTcpConfig,
     websocket::WsConfig,
-    NetworkBehaviour, PeerId, Transport,
+    Multiaddr, NetworkBehaviour, PeerId, Transport,
 };
 use std::{io, time::Duration};
 // use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
@@ -57,7 +57,7 @@ async fn main_async() -> Result<()> {
     psk_fixed.copy_from_slice(&psk[0..32]);
     let psk = PreSharedKey::new(psk_fixed);
     let mut mux_config = libp2p_mplex::MplexConfig::new();
-    mux_config.set_protocol(b"/coda/mplex/1.0.0");
+    mux_config.set_protocol_name(b"/coda/mplex/1.0.0");
     let transport = {
         let tcp = TokioTcpConfig::new().nodelay(true);
         let ws = WsConfig::new(tcp.clone());
@@ -80,9 +80,9 @@ async fn main_async() -> Result<()> {
 
     swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
     swarm.listen_on("/ip4/0.0.0.0/tcp/0/ws".parse()?)?;
-    let parsed_addr = MINA_PEER_ADDR.parse().unwrap();
+    let parsed_addr: Multiaddr = MINA_PEER_ADDR.parse().unwrap();
     println!("Connecting to mina node {} ... ", MINA_PEER_ADDR);
-    match swarm.dial_addr(parsed_addr) {
+    match swarm.dial(parsed_addr) {
         Ok(_) => {
             println!("dial ok");
         }
