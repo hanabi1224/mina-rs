@@ -14,10 +14,10 @@ edition = "2021"
 # libp2p-relay = {path = "../../../rust-libp2p/protocols/relay"}
 # libp2p-websocket = {path = "../../../rust-libp2p/transports/websocket"}
 
-libp2p = {git = "https://github.com/hanabi1224/rust-libp2p", branch = "mplex-custom-protocol", features = ["tcp-tokio"]}
-libp2p-mplex = {git = "https://github.com/hanabi1224/rust-libp2p", branch = "mplex-custom-protocol"}
-libp2p-relay = {git = "https://github.com/hanabi1224/rust-libp2p", branch = "mplex-custom-protocol"}
-libp2p-websocket = {git = "https://github.com/hanabi1224/rust-libp2p", branch = "mplex-custom-protocol"}
+libp2p = {git = "https://github.com/libp2p/rust-libp2p", rev = "243f587eed9a2ce5f7b057506e51e2ad956bbc4c", features = ["tcp-tokio"]}
+libp2p-mplex = {git = "https://github.com/libp2p/rust-libp2p", rev = "243f587eed9a2ce5f7b057506e51e2ad956bbc4c"}
+libp2p-relay = {git = "https://github.com/libp2p/rust-libp2p", rev = "243f587eed9a2ce5f7b057506e51e2ad956bbc4c"}
+libp2p-websocket = {git = "https://github.com/libp2p/rust-libp2p", rev = "243f587eed9a2ce5f7b057506e51e2ad956bbc4c"}
 
 anyhow = "1"
 async-trait = "0.1"
