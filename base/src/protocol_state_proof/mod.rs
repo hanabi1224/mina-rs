@@ -1,6 +1,12 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0
 
+//! Module containing the components of a protocol state proof
+
+// Much of this crate will be replaced by arkworks and 01-proof-systems types
+// so full documentation will not be included
+#![allow(missing_docs)]
+
 use serde::{Deserialize, Serialize};
 use wire_type::WireType;
 
@@ -24,14 +30,15 @@ pub use bulletproof_challenges::{
 
 pub mod field_and_curve_elements;
 pub use field_and_curve_elements::{
-    ECPoint, ECPointVec, FieldElement, FieldElementVec, FiniteECPoint, FiniteECPointPairVec,
-    FiniteECPointVec,
+    ECPoint, ECPointVec, FieldElement, FieldElementVec, FiniteECPoint, FiniteECPointPair,
+    FiniteECPointPairVec, FiniteECPointVec,
 };
 
 #[derive(Clone, Serialize, Deserialize, Default, PartialEq, Debug, WireType)]
 #[serde(from = "<Self as WireType>::WireType")]
 #[serde(into = "<Self as WireType>::WireType")]
 #[wire_type(recurse = 4)]
+/// SNARK proof of the protocol state at some point in time
 pub struct ProtocolStateProof {
     pub statement: ProofStatement,
     pub prev_evals: PrevEvals,
@@ -119,12 +126,12 @@ pub struct PairingBased {
 #[derive(Clone, Serialize, Deserialize, Default, PartialEq, Debug, WireType)]
 #[serde(from = "<Self as WireType>::WireType")]
 #[serde(into = "<Self as WireType>::WireType")]
-pub struct PrevEvals((ProofEvaluations, ProofEvaluations));
+pub struct PrevEvals(pub (ProofEvaluations, ProofEvaluations));
 
 #[derive(Clone, Serialize, Deserialize, Default, PartialEq, Debug, WireType)]
 #[serde(from = "<Self as WireType>::WireType")]
 #[serde(into = "<Self as WireType>::WireType")]
-pub struct PrevXHat(FiniteECPoint);
+pub struct PrevXHat(pub FiniteECPoint);
 
 #[derive(Clone, Serialize, Deserialize, Default, PartialEq, Debug, WireType)]
 #[serde(from = "<Self as WireType>::WireType")]

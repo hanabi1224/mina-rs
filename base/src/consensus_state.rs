@@ -1,20 +1,31 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0
 
+//! Types and funcions related to the Mina consensus state
+
 use crate::{
     epoch_data::EpochData,
     global_slot::GlobalSlot,
     numbers::{Amount, GlobalSlotNumber, Length},
 };
-use mina_crypto::hash::{Hashable, VrfOutputHash};
-use mina_crypto::signature::PublicKey;
+use derive_more::From;
+use mina_crypto::{hash::*, prelude::*, signature::*};
 use serde::{Deserialize, Serialize};
 use wire_type::WireType;
 
-#[derive(Clone, Serialize, Deserialize, Default, PartialEq, Debug, WireType)]
+/// Wrapper struct for the output for a VRF
+#[derive(Clone, Serialize, Deserialize, Default, PartialEq, Debug, WireType, From)]
 #[serde(from = "<Self as WireType>::WireType")]
 #[serde(into = "<Self as WireType>::WireType")]
-pub struct VrfOutputTruncated(Vec<u8>);
+pub struct VrfOutputTruncated(pub Vec<u8>);
+
+impl Base64Encodable for VrfOutputTruncated {}
+
+impl From<&str> for VrfOutputTruncated {
+    fn from(s: &str) -> Self {
+        VrfOutputTruncated(s.as_bytes().to_vec())
+    }
+}
 
 impl Hashable<VrfOutputHash> for VrfOutputTruncated {}
 
@@ -42,10 +53,10 @@ pub struct ConsensusState {
     pub blockchain_length: Length,
     /// Epoch number
     pub epoch_count: Length,
-    /// Minimum odnws density oberved on the chain
+    /// Minimum window density oberved on the chain
     pub min_window_density: Length,
     /// Current sliding window of densities
-    sub_window_densities: Vec<Length>,
+    pub sub_window_densities: Vec<Length>,
     /// Additional VRS output from leader (for seeding Random Oracle)
     pub last_vrf_output: VrfOutputTruncated,
     /// Total supply of currency
@@ -58,6 +69,7 @@ pub struct ConsensusState {
     pub staking_epoch_data: EpochData,
     /// Epoch data for current epoch
     pub next_epoch_data: EpochData,
+    /// If the block has an ancestor in the same checkpoint window
     pub has_ancestor_in_same_checkpoint_window: bool,
     /// Compressed public key of winning account
     pub block_stake_winner: PublicKey,
@@ -70,6 +82,7 @@ pub struct ConsensusState {
 }
 
 impl ConsensusState {
+    /// Returns the sub-window densities as a vec of u32
     pub fn sub_window_densities(&self) -> Vec<u32> {
         self.sub_window_densities.iter().map(|i| i.0).collect()
     }
