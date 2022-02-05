@@ -1,4 +1,4 @@
 ```
 go mod vendor
-go test
+go test -v
 ```
