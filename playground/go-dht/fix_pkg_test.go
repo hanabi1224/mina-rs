@@ -7,7 +7,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 )
 
-func TestMinimalRepro(t *testing.T) {
+func TestFixPackage(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -51,3 +51,24 @@ func TestMinimalRepro(t *testing.T) {
 		t.Error(percentage)
 	}
 }
+
+// func makeHost(t *testing.T) (*bhost.BasicHost, *kaddht.IpfsDHT) {
+// 	connMgr, _ := connmgr.NewConnManager(10, 100)
+// 	dhtOpts := []kaddht.Option{
+// 		kaddht.DisableAutoRefresh(),
+// 		kaddht.Mode(kaddht.ModeServer),
+// 	}
+// 	hostOpt := new(bhost.HostOpts)
+// 	hostOpt.ConnManager = connMgr
+// 	host, err := bhost.NewHost(swarmt.GenSwarm(t, swarmt.OptDisableReuseport), hostOpt)
+// 	require.NoError(t, err)
+// 	hostDHT, err := kaddht.New(CONTEXT, host, dhtOpts...)
+// 	require.NoError(t, err)
+// 	return host, hostDHT
+// }
+
+// func connect(a, b *bhost.BasicHost) {
+// 	hi := peer.AddrInfo{ID: b.ID(), Addrs: b.Addrs()}
+// 	a.Peerstore().AddAddrs(hi.ID, hi.Addrs, peerstore.PermanentAddrTTL)
+// 	a.Connect(CONTEXT, hi)
+// }
