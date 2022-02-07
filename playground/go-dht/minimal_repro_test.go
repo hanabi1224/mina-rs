@@ -37,16 +37,16 @@ func TestMinimalRepro(t *testing.T) {
 
 	host2, _ := makeHost(t, ctx)
 	connect(host, host2, ctx)
-	for i := 0; i < 1000; i += 1 {
+	for i := 0; i < 2000; i += 1 {
 		peerHost, _ := makeHost(t, ctx)
 		connect(host, peerHost, ctx)
 	}
 
 	hostDHT.RefreshRoutingTable()
 
-	percentage := float64(protected) / float64(added)
-	const TARGET float64 = .75
-	const BIAS float64 = .03
+	percentage := float32(protected) / float32(added)
+	const TARGET float32 = .75
+	const BIAS float32 = .03
 	if percentage < TARGET-BIAS || percentage > TARGET+BIAS {
 		t.Error(percentage)
 	}
