@@ -37,8 +37,9 @@ func TestMinimalRepro(t *testing.T) {
 
 	host2, _ := makeHost(t, ctx)
 	connect(host, host2, ctx)
-	for i := 0; i < 2000; i += 1 {
+	for i := 0; i < 3000; i += 1 {
 		peerHost, _ := makeHost(t, ctx)
+		// connect(host2, peerHost, ctx)
 		connect(host, peerHost, ctx)
 	}
 

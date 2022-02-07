@@ -22,12 +22,15 @@ const (
 )
 
 type DHTPeerProtectionPatcher struct {
-	MaxProtected   int
+	// Max number of peers to protect
+	// non-positive means infinite
+	MaxProtected int
+	// Target percentage of protected peers
 	ProtectionRate float32
 
 	lock           sync.RWMutex
-	dist2protected map[int]*orderedmap.OrderedMap
-	dist2tagged    map[int]*orderedmap.OrderedMap //id to distance: map[peer.ID]int
+	dist2protected map[int]*orderedmap.OrderedMap // OrderedMap types: map[peer.ID]time.Time
+	dist2tagged    map[int]*orderedmap.OrderedMap // OrderedMap types: map[peer.ID]time.Time
 
 	dht          *kaddht.IpfsDHT
 	host         host.Host
@@ -71,6 +74,8 @@ func (p *DHTPeerProtectionPatcher) getProtectionRateThreadUnsafe() float32 {
 	return float32(protectedLen) / float32(protectedLen+taggedLen)
 }
 
+// TODO: This is a proof-of-concept implementation
+// not optimized yet for perf
 func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() bool {
 	minDistTagged := -1
 	for d, m := range p.dist2tagged {
@@ -121,6 +126,7 @@ func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() bool {
 		p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
 		return p.adjustProtectedThreadUnsafe()
 	}
+	// TODO: should p.getProtectionRateThreadUnsafe() > p.ProtectionRate case be handled?
 	return false
 }
 
@@ -156,6 +162,7 @@ func (p *DHTPeerProtectionPatcher) Heartbeat(peerId peer.ID) bool {
 	return updated
 }
 
+// Patch the peer protection algorithm of the given dht instance
 func (p *DHTPeerProtectionPatcher) Patch(dht *kaddht.IpfsDHT) {
 	p.dht = dht
 	p.host = dht.Host()

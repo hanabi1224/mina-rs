@@ -12,7 +12,7 @@ func TestIdDistribution(t *testing.T) {
 	m := make(map[int]int)
 	a := GenId()
 	total := 0
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < 3000; i++ {
 		b := GenId()
 		m[kb.CommonPrefixLen(a, b)] += 1
 		total += 1
