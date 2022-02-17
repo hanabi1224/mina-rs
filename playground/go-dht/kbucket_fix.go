@@ -28,7 +28,11 @@ type DHTPeerProtectionPatcher struct {
 	// Target percentage of protected peers
 	ProtectionRate float32
 
-	lock           sync.RWMutex
+	lock sync.RWMutex
+	// OrderedMap it an associative array that preserves key insertion order
+	// which serves a different purpose from SortedMap or PriorityQueue
+	// The performance of OrderedMap is not too worse than map + container/list solution
+	// so keep using it for now to keep the code simple
 	dist2protected map[int]*orderedmap.OrderedMap // OrderedMap types: map[peer.ID]time.Time
 	dist2tagged    map[int]*orderedmap.OrderedMap // OrderedMap types: map[peer.ID]time.Time
 
@@ -74,60 +78,67 @@ func (p *DHTPeerProtectionPatcher) getProtectionRateThreadUnsafe() float32 {
 	return float32(protectedLen) / float32(protectedLen+taggedLen)
 }
 
-// TODO: This is a proof-of-concept implementation
-// not optimized yet for perf
-func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() bool {
-	minDistTagged := -1
-	for d, m := range p.dist2tagged {
-		if m.Len() > 0 {
-			if minDistTagged < 0 || d < minDistTagged {
-				minDistTagged = d
+func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() {
+	for {
+		minDistTagged := -1
+		for d, m := range p.dist2tagged {
+			if m.Len() > 0 {
+				if minDistTagged < 0 || d < minDistTagged {
+					minDistTagged = d
+				}
 			}
 		}
-	}
-	if minDistTagged < 0 {
-		return false
-	}
-	maxDistProtected := -1
-	for d, m := range p.dist2protected {
-		if m.Len() > 0 {
-			if maxDistProtected < 0 || d > maxDistProtected {
-				maxDistProtected = d
+		if minDistTagged < 0 {
+			return
+		}
+		maxDistProtected := -1
+		for d, m := range p.dist2protected {
+			if m.Len() > 0 {
+				if maxDistProtected < 0 || d > maxDistProtected {
+					maxDistProtected = d
+				}
 			}
 		}
-	}
 
-	taggedBucket := p.dist2tagged[minDistTagged]
-	bestTagged := taggedBucket.Back()
-	bestTaggedPeerId := bestTagged.Key.(peer.ID)
-	bestTaggedTime := bestTagged.Value.(time.Time)
+		taggedBucket := p.dist2tagged[minDistTagged]
+		bestTagged := taggedBucket.Back()
+		bestTaggedPeerId := bestTagged.Key.(peer.ID)
+		bestTaggedTime := bestTagged.Value.(time.Time)
 
-	if p.isMaxProtectedReachedThreadUnsafe() {
-		if minDistTagged >= maxDistProtected {
-			return false
+		// When max value is set and reached
+		// we need to perform a swap here
+		if p.isMaxProtectedReachedThreadUnsafe() {
+			// Or maybe we can replace oldest protected peer with latest tagged peer
+			// When distances are the same
+			if minDistTagged >= maxDistProtected {
+				return
+			}
+
+			protectedBucket := p.dist2protected[maxDistProtected]
+			worstProtected := protectedBucket.Front()
+			worstProtectedPeerId := worstProtected.Key.(peer.ID)
+			worstProtectedTime := worstProtected.Value.(time.Time)
+			// Swap
+			taggedBucket.Delete(bestTagged.Key)
+			protectedBucket.Delete(worstProtected.Key)
+			insertThreadUnsafe(p.dist2tagged, maxDistProtected, worstProtectedPeerId, worstProtectedTime)
+			insertThreadUnsafe(p.dist2protected, minDistTagged, bestTaggedPeerId, bestTaggedTime)
+			p.connMgr.Unprotect(worstProtectedPeerId, kbucketTag)
+			p.connMgr.TagPeer(worstProtectedPeerId, kbucketTag, baseConnMgrScore)
+			p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
+		} else if p.getProtectionRateThreadUnsafe() < p.ProtectionRate {
+			// Otherwise just move the selected peer from tagged bucket to protected bucket
+			taggedBucket.Delete(bestTagged.Key)
+			insertThreadUnsafe(p.dist2protected, minDistTagged, bestTaggedPeerId, bestTaggedTime)
+			p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
+		} else {
+			// TODO: should p.getProtectionRateThreadUnsafe() > p.ProtectionRate case be handled?
+			// Not likely needed with current setup
+
+			// Terminate when no operation is performed
+			return
 		}
-
-		protectedBucket := p.dist2protected[maxDistProtected]
-		worstProtected := protectedBucket.Front()
-		worstProtectedPeerId := worstProtected.Key.(peer.ID)
-		worstProtectedTime := worstProtected.Value.(time.Time)
-		// Swap
-		taggedBucket.Delete(bestTagged.Key)
-		protectedBucket.Delete(worstProtected.Key)
-		insertThreadUnsafe(p.dist2tagged, maxDistProtected, worstProtectedPeerId, worstProtectedTime)
-		insertThreadUnsafe(p.dist2protected, minDistTagged, bestTaggedPeerId, bestTaggedTime)
-		p.connMgr.Unprotect(worstProtectedPeerId, kbucketTag)
-		p.connMgr.TagPeer(worstProtectedPeerId, kbucketTag, baseConnMgrScore)
-		p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
-		return p.adjustProtectedThreadUnsafe()
-	} else if p.getProtectionRateThreadUnsafe() < p.ProtectionRate {
-		taggedBucket.Delete(bestTagged.Key)
-		insertThreadUnsafe(p.dist2protected, minDistTagged, bestTaggedPeerId, bestTaggedTime)
-		p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
-		return p.adjustProtectedThreadUnsafe()
 	}
-	// TODO: should p.getProtectionRateThreadUnsafe() > p.ProtectionRate case be handled?
-	return false
 }
 
 func NewPatcher() DHTPeerProtectionPatcher {
