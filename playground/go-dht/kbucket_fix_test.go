@@ -3,7 +3,9 @@ package kbucketfix
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
 	"github.com/libp2p/go-libp2p-core/peer"
 )
@@ -56,7 +58,6 @@ func testPatcher(t *testing.T, targetProtectionRate float32, maxProtected int) {
 	rt.PeerRemoved = func(p peer.ID) {
 		peerRemoved(p)
 		removed += 1
-		// log.Println("PeerRemoved: " + p.String())
 	}
 
 	host2, _ := makeHost(t, ctx)
@@ -68,10 +69,14 @@ func testPatcher(t *testing.T, targetProtectionRate float32, maxProtected int) {
 	}
 
 	hostDHT.RefreshRoutingTable()
+	log.Println("Done refreshing routing table")
+	time.Sleep(time.Second * 2)
+	rt.PeerAdded = func(p peer.ID) { log.Println("PeerAdded: " + p.String()) }
+	rt.PeerRemoved = func(p peer.ID) { log.Println("PeerRemoved: " + p.String()) }
 
 	// Ensure numbers of active peers matches between the patcher and connectiion manager
 	if added-removed != patcher.getProtectedLenThreadUnsafe()+patcher.getTaggedLenThreadUnsafe() {
-		t.Error()
+		t.Error(fmt.Sprintf("%d - %d != %d + %d", added, removed, patcher.getProtectedLenThreadUnsafe(), patcher.getTaggedLenThreadUnsafe()))
 	}
 
 	percentage := patcher.getProtectionRateThreadUnsafe()
@@ -95,7 +100,7 @@ func testPatcher(t *testing.T, targetProtectionRate float32, maxProtected int) {
 		for _, k := range m.Keys() {
 			pid := k.(peer.ID)
 			if !connMgr.IsProtected(pid, kbucketTag) {
-				t.Error()
+				t.Error(fmt.Sprintf("Peer %s should be protected", pid))
 			}
 		}
 	}
@@ -106,7 +111,7 @@ func testPatcher(t *testing.T, targetProtectionRate float32, maxProtected int) {
 		for _, k := range m.Keys() {
 			pid := k.(peer.ID)
 			if connMgr.IsProtected(pid, kbucketTag) {
-				t.Error()
+				t.Error(fmt.Sprintf("Peer %s should not be protected", pid))
 			}
 		}
 	}
