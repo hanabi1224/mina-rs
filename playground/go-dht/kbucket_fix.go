@@ -79,7 +79,29 @@ func (p *DHTPeerProtectionPatcher) getProtectionRateThreadUnsafe() float32 {
 }
 
 func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() {
-	for {
+	maxReached := p.isMaxProtectedReachedThreadUnsafe()
+	nActions := 0
+	if maxReached {
+		// swap at most 1 when a new peer is added
+		nActions = 1
+	} else if p.getProtectionRateThreadUnsafe() < p.ProtectionRate {
+		// Calculate the number of peers that need to be moved from tagged to protected
+		protected := p.getProtectedLenThreadUnsafe()
+		total := protected + p.getTaggedLenThreadUnsafe()
+		targetProtected := int(float32(total) * p.ProtectionRate)
+		if p.MaxProtected > 0 && p.MaxProtected < targetProtected {
+			targetProtected = p.MaxProtected
+		}
+		nActions = targetProtected - protected
+	} else {
+		// Do nothing when protection rate is above threshold
+		// It's not likely needed to prune protected peers in this case,
+		// Remember to uncomment p.adjustProtectedThreadUnsafe() in PeerRemoved callback when
+		// the prune logic is in place
+		return
+	}
+	// Only make the adjustment when protection rate is lower than threshold
+	for i := 0; i < nActions; i++ {
 		minDistTagged := -1
 		for d, m := range p.dist2tagged {
 			if m.Len() > 0 {
@@ -107,7 +129,7 @@ func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() {
 
 		// When max value is set and reached
 		// we need to perform a swap here
-		if p.isMaxProtectedReachedThreadUnsafe() {
+		if maxReached {
 			// Or maybe we can replace oldest protected peer with latest tagged peer
 			// When distances are the same
 			if minDistTagged >= maxDistProtected {
@@ -126,17 +148,11 @@ func (p *DHTPeerProtectionPatcher) adjustProtectedThreadUnsafe() {
 			p.connMgr.Unprotect(worstProtectedPeerId, kbucketTag)
 			p.connMgr.TagPeer(worstProtectedPeerId, kbucketTag, baseConnMgrScore)
 			p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
-		} else if p.getProtectionRateThreadUnsafe() < p.ProtectionRate {
+		} else {
 			// Otherwise just move the selected peer from tagged bucket to protected bucket
 			taggedBucket.Delete(bestTagged.Key)
 			insertThreadUnsafe(p.dist2protected, minDistTagged, bestTaggedPeerId, bestTaggedTime)
 			p.connMgr.Protect(bestTaggedPeerId, kbucketTag)
-		} else {
-			// TODO: should p.getProtectionRateThreadUnsafe() > p.ProtectionRate case be handled?
-			// Not likely needed with current setup
-
-			// Terminate when no operation is performed
-			return
 		}
 	}
 }
@@ -187,6 +203,8 @@ func (p *DHTPeerProtectionPatcher) Patch(dht *kaddht.IpfsDHT) {
 		p.lock.Lock()
 		defer p.lock.Unlock()
 		// TODO: Logic here can be more efficient
+		// In reality, it's not likely to hold connections from a massive number of peers, say 100k+,
+		// a naive implementation can be more readable and less error-prone
 		insertThreadUnsafe(p.dist2tagged, commonPrefixLen, pid, time.UnixMicro(0))
 		p.adjustProtectedThreadUnsafe()
 	}
@@ -210,7 +228,8 @@ func (p *DHTPeerProtectionPatcher) Patch(dht *kaddht.IpfsDHT) {
 				}
 			}
 		}
-		p.adjustProtectedThreadUnsafe()
+		// No need to call this since it does not decrease the protection rate yet
+		// p.adjustProtectedThreadUnsafe()
 	}
 }
 

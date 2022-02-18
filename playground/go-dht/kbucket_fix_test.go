@@ -39,7 +39,7 @@ func testPatcher(t *testing.T, targetProtectionRate float32, maxProtected int) {
 
 	rt := hostDHT.RoutingTable()
 	if rt == nil {
-		t.Error()
+		t.Error("No routing table found")
 	}
 	connMgr := host.ConnManager()
 	added := 0
