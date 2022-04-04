@@ -22,10 +22,6 @@ jobs:
         with:
           path: |
             ~/.cache/sccache
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
           key: ${{ runner.os }}-checks-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
@@ -71,7 +67,7 @@ jobs:
         with:
           path: |
             ~/.cache/sccache
-          key: ${{ runner.os }}-x86_64
+          key: ${{ runner.os }}-x86_64-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -147,7 +143,7 @@ jobs:
         with:
           path: |
             ~/.cache/sccache
-          key: ${{ runner.os }}-wasm
+          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -184,7 +180,7 @@ jobs:
         with:
           path: |
             ~/.cache/sccache
-          key: ${{ runner.os }}-node
+          key: ${{ runner.os }}-node-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -221,7 +217,7 @@ jobs:
         with:
           path: |
             ~/.cache/sccache
-          key: ${{ runner.os }}-codecov
+          key: ${{ runner.os }}-codecov-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
