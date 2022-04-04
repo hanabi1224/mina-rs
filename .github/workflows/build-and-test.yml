@@ -16,15 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: ./.github/install_sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
       - uses: actions/cache@v2
         with:
           path: |
+            ~/.cache/sccache
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
           key: ${{ runner.os }}-checks-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
@@ -64,7 +65,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: ./.github/install_sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache
+          key: ${{ runner.os }}-x86_64
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -83,7 +90,7 @@ jobs:
       # https://github.com/benchmark-action/github-action-benchmark/tree/master/examples/criterion-rs
       - run: (cargo bench --all-features --no-fail-fast -- --output-format bencher > bencher.log) || echo ''
       - name: Download previous benchmark data
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ./.cache
           key: ${{ runner.os }}-benchmark
@@ -134,7 +141,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: ./.github/install_sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache
+          key: ${{ runner.os }}-wasm
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -165,7 +178,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: ./.github/install_sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache
+          key: ${{ runner.os }}-node
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -196,7 +215,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: ./.github/install_sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache
+          key: ${{ runner.os }}-codecov
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
