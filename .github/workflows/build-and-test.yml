@@ -10,6 +10,8 @@ env:
   CARGO_INCREMENTAL: 1
   # Investigate why it does not build with this flag
   # RUSTFLAGS: -Ctarget-cpu=native
+  CC: "sccache clang"
+  CXX: "sccache clang++"
 
 jobs:
   checks:
@@ -17,6 +19,7 @@ jobs:
     steps:
       - run: lscpu
       - uses: actions/checkout@v2
+      - run: ./.github/sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
       - uses: actions/cache@v2
         with:
@@ -25,10 +28,12 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-            apps/target/
-            apps/wasm/target/
           key: ${{ runner.os }}-checks-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache/
+          key: sccache-checks
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -68,6 +73,7 @@ jobs:
     steps:
       - run: lscpu
       - uses: actions/checkout@v2
+      - run: ./.github/sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
       - uses: actions/cache@v2
         with:
@@ -76,9 +82,12 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-            apps/target/
           key: ${{ runner.os }}-x86_64-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache/
+          key: sccache-x86_64
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -149,6 +158,7 @@ jobs:
     steps:
       - run: lscpu
       - uses: actions/checkout@v2
+      - run: ./.github/sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
       - uses: actions/cache@v2
         with:
@@ -157,10 +167,12 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-            apps/target/
-            apps/wasm/target/
           key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache/
+          key: sccache-wasm
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -192,6 +204,7 @@ jobs:
     steps:
       - run: lscpu
       - uses: actions/checkout@v2
+      - run: ./.github/sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
       - uses: actions/cache@v2
         with:
@@ -200,8 +213,12 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            apps/wasm/target/
           key: ${{ runner.os }}-node-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache/
+          key: sccache-node
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -238,6 +255,7 @@ jobs:
     steps:
       - run: lscpu
       - uses: actions/checkout@v2
+      - run: ./.github/sccache.sh
       - run: cat .github/cargo-config > $HOME/.cargo/config
       - uses: actions/cache@v2
         with:
@@ -246,8 +264,12 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
           key: ${{ runner.os }}-codecov-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/sccache/
+          key: sccache-codecov
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
