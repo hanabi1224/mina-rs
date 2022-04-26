@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["ConsensusError","Type that represents errors in mina consensus operations"]]});
