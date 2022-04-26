@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["deserialize","Deserializer for variable length natural integer"],["serialize","Serializer for variable length natural integer"]]});

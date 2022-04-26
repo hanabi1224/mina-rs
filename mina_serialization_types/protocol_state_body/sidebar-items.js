@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["ProtocolStateBody","Body of the protocol state"]],"type":[["ProtocolStateBodyV1","Body of the protocol state (v1)"]]});

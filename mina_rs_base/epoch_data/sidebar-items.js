@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["EpochData","Epoch data"],["EpochLedger","Epoch Ledger"]]});

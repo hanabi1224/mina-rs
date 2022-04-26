@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["BlockchainState","Mina blockchain state struct"]]});
