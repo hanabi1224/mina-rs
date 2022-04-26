@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["ProofMessageWithDegreeBound",""],["ProofMessages",""]],"type":[["ProofMessageWithDegreeBoundV1",""],["ProofMessageWithoutDegreeBoundListV1",""],["ProofMessagesV1",""]]});

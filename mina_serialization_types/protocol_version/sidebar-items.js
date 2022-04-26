@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["ProtocolVersion","Defines a version of the Mina protocol in semver format"]],"type":[["ProtocolVersionV1","Defines a version of the Mina protocol in semver format (v1)"]]});

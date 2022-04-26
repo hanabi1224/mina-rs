@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["integer","Implements serializer and deserializer for BinProt variable length integer"],["nat0","Implements serializer and deserializer for BinProt variable length natural integer (Nat0)"]]});

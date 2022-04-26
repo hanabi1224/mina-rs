@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SignedCommandMemoError","Error type for converting memo types"]],"struct":[["SignedCommandMemo","A memo byte strong for a signed command"]]});

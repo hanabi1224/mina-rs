@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["ExternalTransition","This structure represents a mina block This structure represents a mina block received from an external block producer"]]});
