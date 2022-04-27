@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["ConsensusConstants",""],["ProtocolStateChain",""]],"trait":[["Chain",""],["Consensus",""]]});
