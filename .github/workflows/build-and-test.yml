@@ -204,13 +204,13 @@ jobs:
           override: true
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-      # lerna is pre-installed on github CI images
-      # per <https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md#project-management>
-      # - run: yarn global add lerna
-      - run: lerna bootstrap
-      - run: lerna run build
-      - run: lerna run test
-      - run: lerna run lint
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      - run: pnpm -F "./apps/**" i
+      - run: pnpm -F "./apps/**" run lint
+      - run: pnpm -F "./apps/**" run test
+      - run: pnpm -F "./apps/**" run build
       - uses: actions/upload-artifact@v3
         with:
           name: mvp-chrome-ext

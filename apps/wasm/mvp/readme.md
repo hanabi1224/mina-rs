@@ -12,7 +12,7 @@ In order to connect the web node to the mina network, websocket protocol needs t
 
 [go 1.18.x](https://go.dev/dl/)
 
-[yarn](https://classic.yarnpkg.com/en/docs/install)
+[pnpm](https://pnpm.io/installation)
 
 ```
 cargo install wasm-pack
@@ -32,27 +32,26 @@ cargo install wasm-pack
 
   ```
   cd apps/wasm/mvp
-  yarn
-  yarn build
+  pnpm i
+  pnpm build
   # Run lint
-  yarn lint
+  pnpm lint
   # Regenerate protobuf code
-  yarn build:proto
+  pnpm build:proto
   ```
 
-  Alternatively, this package can be built from root directory of the repo with [workspace manager](https://lerna.js.org/)
+  Alternatively, this package can be built from root directory of the repo
 
   ```
-  yarn global add lerna
-  lerna bootstrap
-  lerna run build
+  pnpm -F "./apps/**" i
+  pnpm -F "./apps/**" run build
   ```
 
 - Run as static web app
 
   ```
   cd apps/wasm/mvp
-  yarn start
+  pnpm start
   ```
 
   Copy & paste peer address that `proxy` prints on console into the web gui at http://localhost:1234/
@@ -70,7 +69,7 @@ cargo install wasm-pack
 - Run as firefox extension
 
   ```
-  yarn global add web-ext
+  pnpm add -g web-ext
   cd dist/ext-v2
   web-ext run
   ```
@@ -78,7 +77,7 @@ cargo install wasm-pack
   or
 
   ```
-  yarn global add web-ext
+  pnpm add -g web-ext
   cd dist/ext-v2
   web-ext build
   ```
@@ -97,7 +96,7 @@ cargo install wasm-pack
 
 - Testing
   ```
-  yarn test
+  pnpm test
   ```
 
 # Notes
